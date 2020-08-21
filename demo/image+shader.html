@@ -1,0 +1,81 @@
+<!doctype html>
+<html>
+<head>
+    <style>
+        html, body {
+            height: 100%;
+        }
+    </style>
+
+    <script src="../src/tingle.js"></script>
+
+</head>
+<body>
+
+
+<script id="2d-vertex-shader" type="x-shader/x-vertex">
+    attribute vec2 a_position;
+
+    void main() {
+        gl_Position = vec4(a_position, 0, 1);
+    }
+</script>
+
+
+<script id="2d-fragment-shader" type="x-shader/x-fragment">
+    precision mediump float;
+
+    uniform float time;
+    uniform vec2 resolution;
+    uniform vec2 mouse;
+    uniform sampler2D texture;
+
+    void main() {
+        vec4 color;
+        vec4 textureColor;
+
+
+        vec2 uv = gl_FragCoord.xy / resolution.xy;
+        textureColor = texture2D(texture, uv) / 2.0;
+
+        float blueness = textureColor.b / (textureColor.r + textureColor.g);
+
+        if (blueness > 0.6) {
+            float factor = 0.7 + (
+               sin(gl_FragCoord.x * 1.0 + sin((gl_FragCoord.x + gl_FragCoord.y * sin(time * 0.2)) * 0.02 - time) * sin(time * 0.5) * 15.0) * 0.5
+             + sin(gl_FragCoord.y * 1.0 + sin((gl_FragCoord.x + gl_FragCoord.y * sin(time * 0.3)) * 0.02 + time) * sin(time * 0.7) * 15.0) * 0.5) * 0.3;
+
+            color = vec4(1.0, 0.7, 0.7, 1.0 * factor);
+        }
+
+        if (blueness > 0.7) {
+            textureColor = color;
+        } else if (blueness > 0.6) {
+            textureColor = mix(color, textureColor, (blueness - 0.6) * 10.0);
+        }
+
+
+        gl_FragColor = textureColor;
+    }
+</script>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        g = webgl(document.getElementById('glscreen'), document.getElementById("2d-vertex-shader").text, document.getElementById("2d-fragment-shader").text);
+        g.buffer([
+            -1.0, -1.0,
+            1.0, -1.0,
+            -1.0, 1.0,
+            -1.0, 1.0,
+            1.0, -1.0,
+            1.0, 1.0], g.gl.TRIANGLES);
+        g.value('texture', 'images/img_8181.jpg');
+        g.render();
+    });
+</script>
+
+<canvas id="glscreen" width="640" height="480"></canvas>
+
+</body>
+</html>
